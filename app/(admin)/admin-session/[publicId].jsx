@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, ScrollView, Text } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import ThemedView from "../../../components/ThemedView";
 import DismissKeyboardView from "../../../components/DismissKeyboardView";
 import ThemedText from "../../../components/ThemedText";
 import ThemedButton from "../../../components/ThemedButton";
 import ThemedInput from "../../../components/ThemedInput";
+import FormLabel from "../../../components/FormLabel";
 import StatusBadge from "../../../components/StatusBadge";
 import Spacer from "../../../components/Spacer";
 import { LoadingView, ErrorView } from "../../../components/StatusViews";
@@ -183,17 +184,48 @@ export default function AdminSessionDetail() {
           </>
         ) : null}
 
-        <ThemedInput full placeholder="Course Code" value={courseCode} onChangeText={setCourseCode} editable={!isBusy} />
+        <FormLabel>Course Code</FormLabel>
+        <ThemedInput full placeholder="e.g. INFO 101" value={courseCode} onChangeText={setCourseCode} editable={!isBusy} />
         <Spacer />
-        <ThemedInput full placeholder="Department" value={dept} onChangeText={setDept} editable={!isBusy} />
+        <FormLabel>Department</FormLabel>
+        <ThemedInput full placeholder="e.g. Computer Science" value={dept} onChangeText={setDept} editable={!isBusy} />
         <Spacer />
-        <ThemedInput full placeholder="Description" value={description} onChangeText={setDescription} multiline editable={!isBusy} />
+        <FormLabel>Description</FormLabel>
+        <ThemedInput full placeholder="Anything students should know" value={description} onChangeText={setDescription} multiline editable={!isBusy} />
         <Spacer />
-        <ThemedInput full placeholder="Valid Till Date (YYYY-MM-DD)" value={date} onChangeText={setDate} editable={!isBusy} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={{ width: "48%" }}>
+            <FormLabel>Valid Till Date (YYYY-MM-DD)</FormLabel>
+            <ThemedInput
+              full
+              placeholder="2026-09-29"
+              value={date}
+              onChangeText={setDate}
+              keyboardType="numbers-and-punctuation"
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isBusy}
+              styles={{ width: "100%" }}
+            />
+          </View>
+          <View style={{ width: "48%" }}>
+            <FormLabel>Valid Till Time (HH:MM)</FormLabel>
+            <ThemedInput
+              full
+              placeholder="14:30"
+              value={time}
+              onChangeText={setTime}
+              keyboardType="numbers-and-punctuation"
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isBusy}
+              styles={{ width: "100%" }}
+            />
+          </View>
+        </View>
         <Spacer />
-        <ThemedInput full placeholder="Valid Till Time (HH:MM, 24h)" value={time} onChangeText={setTime} editable={!isBusy} />
-        <Spacer />
-        <ThemedInput full placeholder="BLE Device Identifier" value={bleDevice} onChangeText={setBleDevice} editable={!isBusy} />
+        <FormLabel>BLE Device Identifier</FormLabel>
+        <ThemedInput full placeholder="Device publicId or BLE address" value={bleDevice} onChangeText={setBleDevice} autoCapitalize="none" autoCorrect={false} editable={!isBusy} />
         <Spacer />
 
         {saveError ? (
@@ -216,9 +248,10 @@ export default function AdminSessionDetail() {
         <ThemedButton
           onPress={handleDeactivate}
           disabled={isBusy || isDeactivateRedundant(record.status)}
-          otherStyles={{ backgroundColor: Colors.primary, marginBottom: 10 }}
+          // Outlined so it can't be mistaken for the filled red Delete below.
+          otherStyles={{ backgroundColor: "transparent", borderWidth: 1, borderColor: Colors.warning, marginBottom: 10 }}
         >
-          <Text style={{ color: "white" }}>{busy === "deactivating" ? "Deactivating…" : "Deactivate Session"}</Text>
+          <Text style={{ color: Colors.warning }}>{busy === "deactivating" ? "Deactivating…" : "Deactivate Session"}</Text>
         </ThemedButton>
         <ThemedButton onPress={confirmDelete} disabled={isBusy} otherStyles={{ backgroundColor: Colors.warning }}>
           <Text style={{ color: "white" }}>{busy === "deleting" ? "Deleting…" : "Delete Session"}</Text>

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, Text, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 import { Link } from "expo-router";
 import ThemedView from "../../components/ThemedView";
 import ThemedText from "../../components/ThemedText";
-import ThemedButton from "../../components/ThemedButton";
+import ActionCard from "../../components/ActionCard";
 import Spacer from "../../components/Spacer";
 import AttendanceListItem from "../../components/AttendanceListItem";
 import { LoadingView, ErrorView, EmptyView } from "../../components/StatusViews";
@@ -23,9 +23,25 @@ const UPCOMING_FETCH_SIZE = 20;
 const UPCOMING_DISPLAY_COUNT = 5;
 
 const NAV_CARDS = [
-  { href: "/student-sign-in", label: "Sign In to Attendance" },
-  { href: "/student-history", label: "Attendance History" },
-  { href: "/student-profile", label: "Profile" },
+  {
+    href: "/student-sign-in",
+    icon: "\u{2705}",
+    label: "Sign In to Attendance",
+    hint: "Check in to a live session happening near you",
+    primary: true,
+  },
+  {
+    href: "/student-history",
+    icon: "\u{1F552}",
+    label: "Attendance History",
+    hint: "Look back at your past check-ins and results",
+  },
+  {
+    href: "/student-profile",
+    icon: "\u{1F464}",
+    label: "Profile",
+    hint: "Your account details and settings",
+  },
 ];
 
 export default function StudentDashboard() {
@@ -77,12 +93,18 @@ export default function StudentDashboard() {
             <ThemedText isHeader styles={{ fontSize: 22 }}>
               Welcome{user?.username ? `, ${user.username}` : ""}
             </ThemedText>
+            <ThemedText styles={{ fontSize: 14, marginTop: 4 }}>
+              Ready for class? Check in or look back at your attendance.
+            </ThemedText>
             <Spacer />
             {NAV_CARDS.map((card) => (
               <Link key={card.href} href={card.href} asChild>
-                <ThemedButton otherStyles={{ width: "100%", marginBottom: 10 }}>
-                  <Text style={{ color: "white" }}>{card.label}</Text>
-                </ThemedButton>
+                <ActionCard
+                  icon={card.icon}
+                  title={card.label}
+                  subtitle={card.hint}
+                  primary={card.primary}
+                />
               </Link>
             ))}
             <Spacer />

@@ -38,7 +38,7 @@ export default function Index() {
         </ThemedText>
         <Spacer />
         <Spacer />
-        <ThemedButton onPress={logout}>
+        <ThemedButton onPress={logout} otherStyles={{ backgroundColor: Colors.warning }}>
           <Text style={{ color: "white" }}>Log out</Text>
         </ThemedButton>
       </ThemedView>

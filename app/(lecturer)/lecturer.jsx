@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, Text, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 import { Link, useRouter } from "expo-router";
 import ThemedView from "../../components/ThemedView";
 import ThemedText from "../../components/ThemedText";
-import ThemedButton from "../../components/ThemedButton";
+import ActionCard from "../../components/ActionCard";
 import Spacer from "../../components/Spacer";
 import AttendanceListItem from "../../components/AttendanceListItem";
 import { LoadingView, ErrorView, EmptyView } from "../../components/StatusViews";
@@ -13,9 +13,25 @@ import { normalizePage } from "../../utils/pagination";
 import Colors from "../../constants/Color";
 
 const NAV_CARDS = [
-  { href: "/lecturer-session-create", label: "Create Attendance Session" },
-  { href: "/lecturer-sessions", label: "Attendance Sessions" },
-  { href: "/lecturer-profile", label: "Profile" },
+  {
+    href: "/lecturer-session-create",
+    icon: "\u{2795}",
+    label: "Create Attendance Session",
+    hint: "Start a new session for one of your classes",
+    primary: true,
+  },
+  {
+    href: "/lecturer-sessions",
+    icon: "\u{1F4C2}",
+    label: "Attendance Sessions",
+    hint: "Track attendance across all your classes",
+  },
+  {
+    href: "/lecturer-profile",
+    icon: "\u{1F464}",
+    label: "Profile",
+    hint: "Your account details and settings",
+  },
 ];
 
 export default function LecturerDashboard() {
@@ -69,12 +85,18 @@ export default function LecturerDashboard() {
             <ThemedText isHeader styles={{ fontSize: 22 }}>
               Welcome{user?.username ? `, ${user.username}` : ""}
             </ThemedText>
+            <ThemedText styles={{ fontSize: 14, marginTop: 4 }}>
+              Ready to take attendance? Pick an option below.
+            </ThemedText>
             <Spacer />
             {NAV_CARDS.map((card) => (
               <Link key={card.href} href={card.href} asChild>
-                <ThemedButton otherStyles={{ width: "100%", marginBottom: 10 }}>
-                  <Text style={{ color: "white" }}>{card.label}</Text>
-                </ThemedButton>
+                <ActionCard
+                  icon={card.icon}
+                  title={card.label}
+                  subtitle={card.hint}
+                  primary={card.primary}
+                />
               </Link>
             ))}
             <Spacer />

@@ -21,7 +21,9 @@ const ThemedButton = ({ otherStyles, onPress, full, disabled, ...props }) => {
 const styles = StyleSheet.create({
   btn: {
     textAlign: "center",
-    backgroundColor: Colors.primary,
+    // Green (white label = 7.9:1) instead of the old yellow primary, where
+    // white label text was 2.1:1 and the surface blended into the mint page.
+    backgroundColor: Colors.secondary,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,

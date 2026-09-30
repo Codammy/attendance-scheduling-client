@@ -2,7 +2,7 @@ import { Pressable, useColorScheme } from "react-native";
 import ThemedText from "./ThemedText";
 import Colors from "../constants/Color";
 
-export default function BleDeviceListItem({ device, onPress }) {
+export default function BleDeviceListItem({ device, onPress, selected }) {
   const theme = Colors[useColorScheme() ?? "light"];
 
   return (
@@ -14,14 +14,15 @@ export default function BleDeviceListItem({ device, onPress }) {
           padding: 16,
           borderRadius: 10,
           backgroundColor: theme.uiBackground,
-          borderWidth: 1,
-          borderColor: theme.border,
+          borderWidth: selected ? 2 : 1,
+          borderColor: selected ? Colors.secondary : theme.border,
           marginBottom: 12,
         },
         pressed && { opacity: 0.7 },
       ]}
     >
       <ThemedText isHeader styles={{ fontSize: 16 }}>
+        {selected ? "✓ " : ""}
         {device.alias || "Unnamed device"}
       </ThemedText>
       <ThemedText styles={{ marginTop: 2, color: theme.iconColor }}>{device.deviceID}</ThemedText>

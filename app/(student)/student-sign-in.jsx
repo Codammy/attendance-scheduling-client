@@ -5,6 +5,7 @@ import DismissKeyboardView from "../../components/DismissKeyboardView";
 import ThemedText from "../../components/ThemedText";
 import ThemedButton from "../../components/ThemedButton";
 import ThemedInput from "../../components/ThemedInput";
+import FormLabel from "../../components/FormLabel";
 import Spacer from "../../components/Spacer";
 import { LoadingView } from "../../components/StatusViews";
 import useBleScanner from "../../ble/useBleScanner";
@@ -337,10 +338,10 @@ export default function StudentSignIn() {
         </ThemedText>
         <ThemedText styles={{ textAlign: "center", fontSize: 12 }}>{selectedDevice.id}</ThemedText>
         <Spacer />
-        <Spacer />
+        <FormLabel>Department (optional)</FormLabel>
         <ThemedInput
           full
-          placeholder="Department (optional)"
+          placeholder="e.g. Computer Science"
           value={dept}
           onChangeText={setDept}
           editable={phase === "confirm"}

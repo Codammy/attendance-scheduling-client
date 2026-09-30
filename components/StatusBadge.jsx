@@ -17,6 +17,8 @@ export default function StatusBadge({ status }) {
   if (!status) return null;
 
   const fill = FILLED_COLOR[status];
+  // White on the yellow primary is 2.1:1 — that one gets dark label text.
+  const textColor = !fill ? theme.text : fill === Colors.primary ? "#132015" : "white";
 
   return (
     <View
@@ -30,7 +32,7 @@ export default function StatusBadge({ status }) {
         borderColor: theme.border,
       }}
     >
-      <ThemedText styles={{ fontSize: 12, color: fill ? "white" : theme.text }}>{status}</ThemedText>
+      <ThemedText styles={{ fontSize: 12, color: textColor }}>{status}</ThemedText>
     </View>
   );
 }

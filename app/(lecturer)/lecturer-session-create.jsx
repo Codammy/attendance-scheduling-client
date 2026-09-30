@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { ScrollView, Text } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import DismissKeyboardView from "../../components/DismissKeyboardView";
 import ThemedText from "../../components/ThemedText";
 import ThemedButton from "../../components/ThemedButton";
 import ThemedInput from "../../components/ThemedInput";
+import FormLabel from "../../components/FormLabel";
 import Spacer from "../../components/Spacer";
 import BleDeviceListItem from "../../components/BleDeviceListItem";
 import { LoadingView } from "../../components/StatusViews";
@@ -89,36 +90,67 @@ export default function LecturerSessionCreate() {
   return (
     <DismissKeyboardView style={{ alignItems: "stretch" }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}>
-        <ThemedInput full placeholder="Course Code" value={courseCode} onChangeText={setCourseCode} />
+        <FormLabel>Course Code</FormLabel>
+        <ThemedInput full placeholder="e.g. INFO 101" value={courseCode} onChangeText={setCourseCode} />
         <Spacer />
-        <ThemedInput full placeholder="Department (optional)" value={dept} onChangeText={setDept} />
+        <FormLabel>Department (optional)</FormLabel>
+        <ThemedInput full placeholder="e.g. Computer Science" value={dept} onChangeText={setDept} />
         <Spacer />
+        <FormLabel>Description (optional)</FormLabel>
         <ThemedInput
           full
-          placeholder="Description (optional)"
+          placeholder="Anything students should know"
           value={description}
           onChangeText={setDescription}
           multiline
         />
         <Spacer />
-        <ThemedInput full placeholder="Valid Till Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
-        <Spacer />
-        <ThemedInput full placeholder="Valid Till Time (HH:MM, 24h)" value={time} onChangeText={setTime} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={{ width: "48%" }}>
+            <FormLabel>Date (YYYY-MM-DD)</FormLabel>
+            <ThemedInput
+              full
+              placeholder="2026-09-29"
+              value={date}
+              onChangeText={setDate}
+              keyboardType="numbers-and-punctuation"
+              autoCapitalize="none"
+              autoCorrect={false}
+              styles={{ width: "100%" }}
+            />
+          </View>
+          <View style={{ width: "48%" }}>
+            <FormLabel>Time (HH:MM)</FormLabel>
+            <ThemedInput
+              full
+              placeholder="14:30"
+              value={time}
+              onChangeText={setTime}
+              keyboardType="numbers-and-punctuation"
+              autoCapitalize="none"
+              autoCorrect={false}
+              styles={{ width: "100%" }}
+            />
+          </View>
+        </View>
         <Spacer />
 
-        <ThemedText>BLE Device</ThemedText>
-        <Spacer />
+        <FormLabel>BLE Device</FormLabel>
 
         {devicesStatus === "loading" ? <LoadingView message="Loading devices…" /> : null}
 
         {devicesStatus === "success" ? (
           <>
             <ThemedButton
-              otherStyles={{ width: "100%", backgroundColor: Colors.secondary }}
+              otherStyles={{ width: "100%" }}
               onPress={() => setShowDevicePicker((prev) => !prev)}
             >
               <Text style={{ color: "white" }}>
-                {selectedDevice ? selectedDevice.alias || selectedDevice.deviceID : "Select a device"}
+                {selectedDevice
+                  ? `✓ ${selectedDevice.alias || selectedDevice.deviceID}`
+                  : showDevicePicker
+                    ? "Hide device list"
+                    : "Select a device"}
               </Text>
             </ThemedButton>
             {showDevicePicker ? (
@@ -128,7 +160,12 @@ export default function LecturerSessionCreate() {
                   <ThemedText>No BLE devices registered yet. Ask an admin to register one.</ThemedText>
                 ) : (
                   devices.map((device) => (
-                    <BleDeviceListItem key={device.publicId} device={device} onPress={handleSelectDevice} />
+                    <BleDeviceListItem
+                      key={device.publicId}
+                      device={device}
+                      selected={selectedDevice?.publicId === device.publicId}
+                      onPress={handleSelectDevice}
+                    />
                   ))
                 )}
               </>
@@ -143,11 +180,14 @@ export default function LecturerSessionCreate() {
               device's identifier and enter it below.
             </ThemedText>
             <Spacer />
+            <FormLabel>BLE Device Identifier</FormLabel>
             <ThemedInput
               full
-              placeholder="BLE Device Identifier"
+              placeholder="Device publicId or BLE address"
               value={manualDeviceId}
               onChangeText={setManualDeviceId}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </>
         ) : null}

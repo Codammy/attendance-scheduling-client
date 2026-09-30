@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, Text, Image } from "react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import DismissKeyboardView from "../../components/DismissKeyboardView";
 import ThemedText from "../../components/ThemedText";
 import ThemedButton from "../../components/ThemedButton";
@@ -17,6 +17,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordRef = useRef(null);
 
   async function handleSubmit() {
     if (!username || !password) {
@@ -49,21 +50,30 @@ export default function Login() {
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
+        autoComplete="username"
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
         editable={!isSubmitting}
       />
       <Spacer />
       <ThemedInput
         full
         secure
+        ref={passwordRef}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
+        autoComplete="password"
+        returnKeyType="done"
+        onSubmitEditing={handleSubmit}
         editable={!isSubmitting}
       />
       <Spacer />
-      {error ? <ThemedText styles={{ color: Colors.warning }}>{error}</ThemedText> : null}
+      {error ? (
+        <ThemedText styles={{ color: Colors.warning, textAlign: "center" }}>{error}</ThemedText>
+      ) : null}
       <Spacer />
-      <ThemedButton onPress={handleSubmit} disabled={isSubmitting}>
+      <ThemedButton onPress={handleSubmit} disabled={isSubmitting} full>
         {isSubmitting ? <ActivityIndicator color="white" /> : <Text style={{ color: "white" }}>Login</Text>}
       </ThemedButton>
     </DismissKeyboardView>

@@ -1,8 +1,8 @@
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { Link, useRouter } from "expo-router";
 import ThemedView from "../../components/ThemedView";
 import ThemedInput from "../../components/ThemedInput";
-import ThemedButton from "../../components/ThemedButton";
+import ActionCard from "../../components/ActionCard";
 import Spacer from "../../components/Spacer";
 import AttendanceListItem from "../../components/AttendanceListItem";
 import { LoadingView, ErrorView, EmptyView } from "../../components/StatusViews";
@@ -30,9 +30,12 @@ export default function LecturerSessions() {
     <ThemedView style={{ paddingHorizontal: 16 }}>
       <Spacer />
       <Link href="/lecturer-session-create" asChild>
-        <ThemedButton otherStyles={{ width: "100%" }}>
-          <Text style={{ color: "white" }}>Create Attendance Session</Text>
-        </ThemedButton>
+        <ActionCard
+          icon="\u{2795}"
+          title="Create Attendance Session"
+          subtitle="Start a new session for one of your classes"
+          primary
+        />
       </Link>
       <Spacer />
       <ThemedInput

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Text } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import ThemedView from "../../../components/ThemedView";
 import ThemedText from "../../../components/ThemedText";
-import ThemedButton from "../../../components/ThemedButton";
+import ActionCard from "../../../components/ActionCard";
 import StatusBadge from "../../../components/StatusBadge";
 import FieldRow from "../../../components/FieldRow";
 import Spacer from "../../../components/Spacer";
@@ -67,9 +66,12 @@ export default function AttendanceDetail() {
         <>
           <Spacer />
           <Link href="/student-sign-in" asChild>
-            <ThemedButton otherStyles={{ width: "100%" }}>
-              <Text style={{ color: "white" }}>Sign In to Attendance</Text>
-            </ThemedButton>
+            <ActionCard
+              icon="\u{2705}"
+              title="Sign In to Attendance"
+              subtitle="Open the scanner and check in to this session"
+              primary
+            />
           </Link>
         </>
       ) : null}

@@ -5,6 +5,7 @@ import DismissKeyboardView from "../../components/DismissKeyboardView";
 import ThemedText from "../../components/ThemedText";
 import ThemedButton from "../../components/ThemedButton";
 import ThemedInput from "../../components/ThemedInput";
+import FormLabel from "../../components/FormLabel";
 import Spacer from "../../components/Spacer";
 import { createBleDevice } from "../../api/ble";
 import Colors from "../../constants/Color";
@@ -42,9 +43,18 @@ export default function AdminDeviceCreate() {
       </ThemedText>
       <Spacer />
       <Spacer />
-      <ThemedInput full placeholder="Device ID (BLE address)" value={deviceID} onChangeText={setDeviceID} autoCapitalize="characters" />
+      <FormLabel>Device ID (BLE address)</FormLabel>
+      <ThemedInput
+        full
+        placeholder="e.g. AA:BB:CC:DD:EE:FF"
+        value={deviceID}
+        onChangeText={setDeviceID}
+        autoCapitalize="characters"
+        autoCorrect={false}
+      />
       <Spacer />
-      <ThemedInput full placeholder="Alias (e.g. Room 101)" value={alias} onChangeText={setAlias} />
+      <FormLabel>Alias</FormLabel>
+      <ThemedInput full placeholder="e.g. Room 101" value={alias} onChangeText={setAlias} />
       <Spacer />
       {error ? (
         <>

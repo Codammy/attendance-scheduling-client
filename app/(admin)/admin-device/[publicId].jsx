@@ -6,6 +6,7 @@ import DismissKeyboardView from "../../../components/DismissKeyboardView";
 import ThemedText from "../../../components/ThemedText";
 import ThemedButton from "../../../components/ThemedButton";
 import ThemedInput from "../../../components/ThemedInput";
+import FormLabel from "../../../components/FormLabel";
 import Spacer from "../../../components/Spacer";
 import { LoadingView, ErrorView } from "../../../components/StatusViews";
 import { getBleDeviceById, updateBleDevice, deleteBleDevice } from "../../../api/ble";
@@ -98,16 +99,19 @@ export default function AdminDeviceDetail() {
 
   return (
     <DismissKeyboardView style={{ justifyContent: "center", paddingHorizontal: 24 }}>
+      <FormLabel>Device ID (BLE address)</FormLabel>
       <ThemedInput
         full
-        placeholder="Device ID (BLE address)"
+        placeholder="e.g. AA:BB:CC:DD:EE:FF"
         value={deviceID}
         onChangeText={setDeviceID}
         autoCapitalize="characters"
+        autoCorrect={false}
         editable={!busy}
       />
       <Spacer />
-      <ThemedInput full placeholder="Alias" value={alias} onChangeText={setAlias} editable={!busy} />
+      <FormLabel>Alias</FormLabel>
+      <ThemedInput full placeholder="e.g. Room 101" value={alias} onChangeText={setAlias} editable={!busy} />
       <Spacer />
       {saveError ? (
         <>

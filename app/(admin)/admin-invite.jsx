@@ -45,19 +45,28 @@ export default function AdminInvite() {
 
       <ThemedText>Role</ThemedText>
       <Spacer />
-      {ROLES.map((r) => (
-        <ThemedButton
-          key={r}
-          otherStyles={{
-            width: "100%",
-            marginBottom: 10,
-            backgroundColor: role === r ? Colors.secondary : Colors.primary,
-          }}
-          onPress={() => setRole(r)}
-        >
-          <Text style={{ color: "white" }}>{r === "STUDENT" ? "Student" : "Lecturer"}</Text>
-        </ThemedButton>
-      ))}
+      {ROLES.map((r) => {
+        const selected = role === r;
+        return (
+          <ThemedButton
+            key={r}
+            disabled={isSubmitting}
+            otherStyles={{
+              width: "100%",
+              marginBottom: 10,
+              backgroundColor: selected ? Colors.secondary : "transparent",
+              borderWidth: selected ? 0 : 1,
+              borderColor: Colors.secondary,
+            }}
+            onPress={() => setRole(r)}
+          >
+            <Text style={{ color: selected ? "white" : Colors.secondary }}>
+              {selected ? "✓ " : ""}
+              {r === "STUDENT" ? "Student" : "Lecturer"}
+            </Text>
+          </ThemedButton>
+        );
+      })}
 
       <Spacer />
       {error ? (

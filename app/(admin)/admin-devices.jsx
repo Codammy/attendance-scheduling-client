@@ -1,8 +1,8 @@
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { Link, useRouter } from "expo-router";
 import ThemedView from "../../components/ThemedView";
 import ThemedInput from "../../components/ThemedInput";
-import ThemedButton from "../../components/ThemedButton";
+import ActionCard from "../../components/ActionCard";
 import Spacer from "../../components/Spacer";
 import BleDeviceListItem from "../../components/BleDeviceListItem";
 import { LoadingView, ErrorView, EmptyView } from "../../components/StatusViews";
@@ -30,9 +30,12 @@ export default function AdminDevices() {
     <ThemedView style={{ paddingHorizontal: 16 }}>
       <Spacer />
       <Link href="/admin-device-create" asChild>
-        <ThemedButton otherStyles={{ width: "100%" }}>
-          <Text style={{ color: "white" }}>Register BLE Device</Text>
-        </ThemedButton>
+        <ActionCard
+          icon="\u{1F4E1}"
+          title="Register BLE Device"
+          subtitle="Add a classroom beacon so students can sign in to it"
+          primary
+        />
       </Link>
       <Spacer />
       <ThemedInput
