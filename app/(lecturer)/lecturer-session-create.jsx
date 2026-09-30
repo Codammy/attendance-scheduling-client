@@ -7,15 +7,11 @@ import ThemedButton from "../../components/ThemedButton";
 import ThemedInput from "../../components/ThemedInput";
 import FormLabel from "../../components/FormLabel";
 import Spacer from "../../components/Spacer";
-import BleDeviceListItem from "../../components/BleDeviceListItem";
+import BleDeviceScanner from "../../components/BleDeviceScanner";
 import { LoadingView } from "../../components/StatusViews";
 import { createAttendance } from "../../api/attendance";
-import { getBleDevices } from "../../api/ble";
-import { normalizePage } from "../../utils/pagination";
 import { parseDateTimeInputs } from "../../utils/date";
 import Colors from "../../constants/Color";
-
-const DEVICE_LIST_SIZE = 200;
 
 export default function LecturerSessionCreate() {
   const router = useRouter();
@@ -26,40 +22,35 @@ export default function LecturerSessionCreate() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
-  const [devices, setDevices] = useState([]);
-  // Registering/editing/deleting BLE devices is admin-only, but lecturers
-  // can still read GET /ble-device to pick one here. Falls back to manual
-  // entry only on an actual fetch failure (network/server error), rather
-  // than blocking session creation entirely.
-  const [devicesStatus, setDevicesStatus] = useState("loading");
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [showDevicePicker, setShowDevicePicker] = useState(false);
-  const [manualDeviceId, setManualDeviceId] = useState("");
-
+  const [scannerPhase, setScannerPhase] = useState("idle"); // idle, scanning, confirm
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getBleDevices({ size: DEVICE_LIST_SIZE });
-        setDevices(normalizePage(data).items);
-        setDevicesStatus("success");
-      } catch (err) {
-        setDevicesStatus("error");
-      }
-    })();
-  }, []);
-
-  function handleSelectDevice(device) {
+  function handleDeviceSelected(device) {
     setSelectedDevice(device);
-    setShowDevicePicker(false);
+    if (device) {
+      setScannerPhase("confirm");
+    } else {
+      setScannerPhase("idle");
+    }
+  }
+
+  function handleRescan() {
+    setSelectedDevice(null);
+    setScannerPhase("scanning");
+  }
+
+  function handleScanComplete() {
+    // BleDeviceScanner handles the phase internally, but we track our own state
+    // for the "Scan for BLE Device" button visibility
+    setScannerPhase("confirm");
   }
 
   async function handleSubmit() {
-    const bleDevice = selectedDevice?.publicId || manualDeviceId.trim();
+    const bleDevice = selectedDevice?.id;
     if (!courseCode.trim() || !date.trim() || !time.trim() || !bleDevice) {
-      setError("Please fill in course code, date, time, and a BLE device.");
+      setError("Please fill in course code, date, time, and scan/select a BLE device.");
       return;
     }
 
@@ -137,60 +128,30 @@ export default function LecturerSessionCreate() {
 
         <FormLabel>BLE Device</FormLabel>
 
-        {devicesStatus === "loading" ? <LoadingView message="Loading devices…" /> : null}
-
-        {devicesStatus === "success" ? (
+        {selectedDevice ? (
           <>
-            <ThemedButton
-              otherStyles={{ width: "100%" }}
-              onPress={() => setShowDevicePicker((prev) => !prev)}
-            >
-              <Text style={{ color: "white" }}>
-                {selectedDevice
-                  ? `✓ ${selectedDevice.alias || selectedDevice.deviceID}`
-                  : showDevicePicker
-                    ? "Hide device list"
-                    : "Select a device"}
-              </Text>
-            </ThemedButton>
-            {showDevicePicker ? (
-              <>
-                <Spacer />
-                {devices.length === 0 ? (
-                  <ThemedText>No BLE devices registered yet. Ask an admin to register one.</ThemedText>
-                ) : (
-                  devices.map((device) => (
-                    <BleDeviceListItem
-                      key={device.publicId}
-                      device={device}
-                      selected={selectedDevice?.publicId === device.publicId}
-                      onPress={handleSelectDevice}
-                    />
-                  ))
-                )}
-              </>
-            ) : null}
-          </>
-        ) : null}
-
-        {devicesStatus === "error" ? (
-          <>
-            <ThemedText>
-              Couldn't load the registered device list. Ask an admin for the
-              device's identifier and enter it below.
+            <ThemedText isHeader styles={{ fontSize: 16 }}>
+              ✓ {selectedDevice.name || selectedDevice.localName || "Unknown BLE Device"}
             </ThemedText>
+            <ThemedText styles={{ fontSize: 12, color: Colors.iconColor }}>ID: {selectedDevice.id}</ThemedText>
+            <ThemedText styles={{ fontSize: 12, color: Colors.iconColor }}>Signal: {selectedDevice.rssi ?? "N/A"} dBm</ThemedText>
             <Spacer />
-            <FormLabel>BLE Device Identifier</FormLabel>
-            <ThemedInput
-              full
-              placeholder="Device publicId or BLE address"
-              value={manualDeviceId}
-              onChangeText={setManualDeviceId}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <ThemedButton
+              onPress={handleRescan}
+              otherStyles={{ backgroundColor: "transparent", borderWidth: 1, borderColor: Colors.secondary }}
+            >
+              <Text style={{ color: Colors.secondary }}>Change Device / Rescan</Text>
+            </ThemedButton>
           </>
-        ) : null}
+        ) : (
+          <BleDeviceScanner
+            onDeviceSelected={handleDeviceSelected}
+            title="Select BLE Device for Attendance"
+            subtitle="Scan for the classroom BLE device and select it for this session."
+            showTitle={false}
+            initialPhase="intro"
+          />
+        )}
 
         <Spacer />
         {error ? (
@@ -200,7 +161,7 @@ export default function LecturerSessionCreate() {
           </>
         ) : null}
 
-        <ThemedButton onPress={handleSubmit} disabled={isSubmitting}>
+        <ThemedButton onPress={handleSubmit} disabled={isSubmitting || !selectedDevice}>
           <Text style={{ color: "white" }}>{isSubmitting ? "Creating…" : "Create Session"}</Text>
         </ThemedButton>
       </ScrollView>
