@@ -14,8 +14,10 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-ble-plx": "^3.5.1",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0"
+    "react-native-screens": "~4.26.0",
+    "react-native-worklets": "0.10.1"
   },
   "scripts": {
     "start": "expo start",
@@ -24,6 +26,5 @@
     "web": "expo start --web"
   },
   "private": true,
-  "react-dom": "19.2.3",
-  "react-native-worklets": "0.10.4"
+  "react-dom": "19.2.3"
 }

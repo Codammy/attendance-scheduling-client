@@ -7,9 +7,8 @@ import ThemedButton from "../../components/ThemedButton";
 import ThemedInput from "../../components/ThemedInput";
 import FormLabel from "../../components/FormLabel";
 import Spacer from "../../components/Spacer";
-import { LoadingView } from "../../components/StatusViews";
+import { LoadingView, EmptyView, ErrorView } from "../../components/StatusViews";
 import useBleScanner from "../../ble/useBleScanner";
-import { matchRegisteredDevices } from "../../ble/matchRegisteredDevice";
 import { PermissionResult } from "../../ble/permissions";
 import { signInAttendance } from "../../api/attendance";
 import Colors from "../../constants/Color";
@@ -21,24 +20,56 @@ const BLUETOOTH_STATE_MESSAGES = {
   Resetting: "Bluetooth is resetting. Please try again in a moment.",
 };
 
-function DeviceRow({ device, onPress }) {
+function DeviceRow({ device, onPress, isSelected }) {
   const theme = Colors[useColorScheme() ?? "light"];
   return (
     <ThemedButton
       onPress={() => onPress(device)}
       otherStyles={{
         width: "100%",
-        backgroundColor: theme.uiBackground,
-        borderWidth: 1,
-        borderColor: theme.border,
+        backgroundColor: isSelected ? Colors.secondary : theme.uiBackground,
+        borderWidth: isSelected ? 2 : 1,
+        borderColor: isSelected ? Colors.secondary : theme.border,
         alignItems: "flex-start",
         marginBottom: 10,
       }}
     >
-      <ThemedText isHeader styles={{ fontSize: 15 }}>
-        {device.alias || device.name || "Unnamed device"}
+      <ThemedText
+        isHeader
+        styles={{
+          fontSize: 15,
+          color: isSelected ? "#FFFFFF" : theme.title,
+        }}
+      >
+        {device.name || device.localName || "Unknown BLE Device"}
       </ThemedText>
-      <ThemedText styles={{ fontSize: 12 }}>{device.id}</ThemedText>
+      <ThemedText
+        styles={{
+          fontSize: 12,
+          color: isSelected ? "#D7ECDA" : theme.iconColor,
+        }}
+      >
+        ID: {device.id}
+      </ThemedText>
+      <ThemedText
+        styles={{
+          fontSize: 12,
+          marginTop: 2,
+          color: isSelected ? "#D7ECDA" : theme.iconColor,
+        }}
+      >
+        Signal: {device.rssi ?? "N/A"} dBm
+      </ThemedText>
+      <ThemedText
+        styles={{
+          fontSize: 13,
+          marginTop: 6,
+          fontWeight: "600",
+          color: isSelected ? "#FFFFFF" : Colors.secondary,
+        }}
+      >
+        {isSelected ? "✓ Selected" : "Select"}
+      </ThemedText>
     </ThemedButton>
   );
 }
@@ -47,58 +78,17 @@ export default function StudentSignIn() {
   const scanner = useBleScanner();
 
   const [phase, setPhase] = useState(Platform.OS === "android" ? "intro" : "unsupported-platform");
-  const [candidates, setCandidates] = useState([]);
-  const [matchWarning, setMatchWarning] = useState(null);
+  const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
-  // dept is optional on SignInRequest — prefilled from the matched session
-  // when known (see resolveMatches), otherwise left for the student to enter.
   const [dept, setDept] = useState("");
   const [submitError, setSubmitError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-
-  // Cleanup on unmount is handled inside useBleScanner itself.
-
-  async function resolveMatches() {
-    const found = scanner.devices;
-    if (found.length === 0) {
-      setPhase("no-devices");
-      return;
-    }
-
-    setPhase("resolving");
-    try {
-      const matches = await matchRegisteredDevices(found);
-      setMatchWarning(null);
-      if (matches.length === 0) {
-        setPhase("no-match");
-        return;
-      }
-      if (matches.length === 1) {
-        setSelectedDevice(matches[0]);
-        if (matches[0].session?.dept) setDept(matches[0].session.dept);
-        setPhase("confirm");
-        return;
-      }
-      setCandidates(matches);
-      setPhase("select");
-    } catch (err) {
-      // Couldn't load attendance sessions to match against (e.g. a network
-      // failure) — fall back to manual selection from the raw scan results
-      // rather than blocking sign-in entirely.
-      setMatchWarning(
-        err.message ||
-          "Couldn't verify which device is registered. Select the correct device below."
-      );
-      setCandidates(found);
-      setPhase("select");
-    }
-  }
 
   // Natural scan completion (timeout elapsed) — asynchronous, so it can't be
   // captured by handleStartScan's return value; must be observed reactively.
   useEffect(() => {
     if (phase === "scanning" && scanner.scanComplete) {
-      resolveMatches();
+      setPhase("results");
     }
   }, [scanner.scanComplete, phase]);
 
@@ -108,21 +98,28 @@ export default function StudentSignIn() {
     }
   }, [scanner.scanError, phase]);
 
+  // Update discovered devices list reactively during scanning
+  useEffect(() => {
+    if (phase === "scanning") {
+      setDiscoveredDevices(scanner.devices);
+    }
+  }, [scanner.devices, phase]);
+
   function resetToIntro() {
     setPhase("intro");
-    setCandidates([]);
-    setMatchWarning(null);
+    setDiscoveredDevices([]);
     setSelectedDevice(null);
     setSubmitError(null);
     setSuccessMessage(null);
+    setDept("");
   }
 
   async function handleStartScan() {
-    setCandidates([]);
-    setMatchWarning(null);
+    setDiscoveredDevices([]);
     setSelectedDevice(null);
     setSubmitError(null);
     setSuccessMessage(null);
+    setDept("");
     setPhase("scanning");
 
     const result = await scanner.startScan();
@@ -138,16 +135,24 @@ export default function StudentSignIn() {
 
   function handleStopAndContinue() {
     scanner.stopScan();
-    resolveMatches();
+    setPhase("results");
   }
 
   function handleSelectDevice(device) {
     setSelectedDevice(device);
-    if (device.session?.dept) setDept(device.session.dept);
     setPhase("confirm");
   }
 
+  function handleRescan() {
+    setSelectedDevice(null);
+    handleStartScan();
+  }
+
   async function handleConfirmSignIn() {
+    if (!selectedDevice) {
+      setSubmitError("Please select a BLE device first.");
+      return;
+    }
     setPhase("submitting");
     try {
       const data = await signInAttendance({
@@ -186,8 +191,8 @@ export default function StudentSignIn() {
         </ThemedText>
         <Spacer />
         <ThemedText styles={{ textAlign: "center" }}>
-          Your device will scan for nearby Bluetooth devices and match them
-          against the registered classroom device for your session.
+          Scan for nearby classroom BLE devices and select the one you are
+          signing in to.
         </ThemedText>
         <Spacer />
         <Spacer />
@@ -201,18 +206,10 @@ export default function StudentSignIn() {
   if (phase === "scanning") {
     return (
       <ThemedView style={{ justifyContent: "center", paddingHorizontal: 24 }}>
-        <LoadingView message={`Scanning for devices… (${scanner.devices.length} found)`} />
+        <LoadingView message={`Scanning for nearby BLE devices… (${scanner.devices.length} found)`} />
         <ThemedButton onPress={handleStopAndContinue} otherStyles={{ backgroundColor: Colors.secondary }}>
-          <Text style={{ color: "white" }}>Stop &amp; Continue</Text>
+          <Text style={{ color: "white" }}>Stop & View Results</Text>
         </ThemedButton>
-      </ThemedView>
-    );
-  }
-
-  if (phase === "resolving") {
-    return (
-      <ThemedView>
-        <LoadingView message="Checking registered devices…" />
       </ThemedView>
     );
   }
@@ -275,56 +272,52 @@ export default function StudentSignIn() {
     );
   }
 
-  if (phase === "no-devices") {
-    return (
-      <ThemedView style={{ justifyContent: "center", paddingHorizontal: 24 }}>
-        <ThemedText styles={{ textAlign: "center" }}>
-          No nearby Bluetooth devices were found. Move closer to the
-          classroom device and try again.
-        </ThemedText>
-        <Spacer />
-        <ThemedButton onPress={handleStartScan}>
-          <Text style={{ color: "white" }}>Scan Again</Text>
-        </ThemedButton>
-      </ThemedView>
-    );
-  }
+  if (phase === "results") {
+    if (discoveredDevices.length === 0) {
+      return (
+        <ThemedView style={{ justifyContent: "center", paddingHorizontal: 24 }}>
+          <ThemedText isHeader styles={{ fontSize: 18, textAlign: "center" }}>
+            No BLE Devices Found
+          </ThemedText>
+          <Spacer />
+          <ThemedText styles={{ textAlign: "center" }}>
+            Make sure the attendance device is powered on and nearby, then try again.
+          </ThemedText>
+          <Spacer />
+          <ThemedButton onPress={handleRescan}>
+            <Text style={{ color: "white" }}>Rescan</Text>
+          </ThemedButton>
+        </ThemedView>
+      );
+    }
 
-  if (phase === "no-match") {
     return (
-      <ThemedView style={{ justifyContent: "center", paddingHorizontal: 24 }}>
-        <ThemedText styles={{ textAlign: "center" }}>
-          Found {scanner.devices.length} nearby device
-          {scanner.devices.length === 1 ? "" : "s"}, but none is a registered
-          attendance device.
+      <ThemedView style={{ paddingHorizontal: 16, flex: 1 }}>
+        <Spacer />
+        <ThemedText isHeader styles={{ fontSize: 18, textAlign: "center" }}>
+          Nearby BLE Devices
         </ThemedText>
         <Spacer />
-        <ThemedButton onPress={handleStartScan}>
-          <Text style={{ color: "white" }}>Scan Again</Text>
-        </ThemedButton>
-      </ThemedView>
-    );
-  }
-
-  if (phase === "select") {
-    return (
-      <ThemedView style={{ paddingHorizontal: 16 }}>
-        <Spacer />
-        <ThemedText isHeader styles={{ fontSize: 16 }}>
-          Select the attendance device
+        <ThemedText styles={{ textAlign: "center", color: Colors.iconColor }}>
+          Select the device you are signing in to.
         </ThemedText>
-        {matchWarning ? (
-          <>
-            <Spacer />
-            <ThemedText styles={{ color: Colors.warning }}>{matchWarning}</ThemedText>
-          </>
-        ) : null}
         <Spacer />
         <FlatList
           style={{ flex: 1, width: "100%" }}
-          data={candidates}
+          data={discoveredDevices}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <DeviceRow device={item} onPress={handleSelectDevice} />}
+          renderItem={({ item }) => (
+            <DeviceRow
+              device={item}
+              onPress={handleSelectDevice}
+              isSelected={selectedDevice?.id === item.id}
+            />
+          )}
+          ListFooterComponent={
+            <ThemedButton onPress={handleRescan} otherStyles={{ marginTop: 10 }}>
+              <Text style={{ color: "white" }}>Rescan</Text>
+            </ThemedButton>
+          }
         />
       </ThemedView>
     );
@@ -334,9 +327,18 @@ export default function StudentSignIn() {
     return (
       <DismissKeyboardView style={{ justifyContent: "center", paddingHorizontal: 24 }}>
         <ThemedText isHeader styles={{ fontSize: 18, textAlign: "center" }}>
-          {selectedDevice.alias || selectedDevice.name || "Selected Device"}
+          Selected Device
         </ThemedText>
-        <ThemedText styles={{ textAlign: "center", fontSize: 12 }}>{selectedDevice.id}</ThemedText>
+        <Spacer />
+        <ThemedText isHeader styles={{ fontSize: 16, textAlign: "center" }}>
+          {selectedDevice?.name || selectedDevice?.localName || "Unknown BLE Device"}
+        </ThemedText>
+        <ThemedText styles={{ textAlign: "center", fontSize: 12, color: Colors.iconColor }}>
+          ID: {selectedDevice?.id}
+        </ThemedText>
+        <ThemedText styles={{ textAlign: "center", fontSize: 12, color: Colors.iconColor }}>
+          Signal: {selectedDevice?.rssi ?? "N/A"} dBm
+        </ThemedText>
         <Spacer />
         <FormLabel>Department (optional)</FormLabel>
         <ThemedInput
@@ -355,10 +357,20 @@ export default function StudentSignIn() {
             <Spacer />
           </>
         ) : null}
-        <ThemedButton onPress={handleConfirmSignIn} disabled={phase === "submitting"}>
+        <ThemedButton onPress={handleConfirmSignIn} disabled={phase === "submitting" || !selectedDevice}>
           <Text style={{ color: "white" }}>
             {phase === "submitting" ? "Signing In…" : "Confirm Sign In"}
           </Text>
+        </ThemedButton>
+        <Spacer />
+        <ThemedButton
+          onPress={() => {
+            setSelectedDevice(null);
+            setPhase("results");
+          }}
+          otherStyles={{ backgroundColor: "transparent", borderWidth: 1, borderColor: Colors.secondary }}
+        >
+          <Text style={{ color: Colors.secondary }}>Change Device</Text>
         </ThemedButton>
       </DismissKeyboardView>
     );
