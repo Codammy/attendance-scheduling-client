@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "attendance-scheduling-client",
-    "slug": "attendance-scheduling-client",
+    "slug": "attendance-scheduling-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -42,8 +42,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "00449239-4c48-4098-92ff-66f4b46706ef"
+        "projectId": "95ed31d2-7765-4d6c-a8a4-894646643d3d"
       }
-    }
+    },
+    "owner": "codammy"
   }
 }
